@@ -1,0 +1,5 @@
+# Pipeline runtime: API deps + orchestration + transformations
+-r requirements.txt
+prefect==3.9.0
+dbt-core==1.12.6
+dbt-postgres==1.11.0

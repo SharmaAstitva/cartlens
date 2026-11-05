@@ -1,0 +1,192 @@
+version: 2
+
+# These descriptions are written to Postgres as comments (persist_docs) and
+# sent to the LLM as the schema for "Ask your data". Keep them precise.
+
+models:
+  - name: fct_orders
+    description: One row per order. Each order contains a single product line. Dates are in IST.
+    columns:
+      - name: order_id
+        description: Order identifier.
+        data_tests: [unique, not_null]
+      - name: customer_id
+        description: Customer who placed the order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: ordered_at
+        description: When the order was placed (timestamptz).
+      - name: order_date
+        description: Order date in IST. Use this for day/month filters.
+        data_tests: [not_null]
+      - name: city
+        description: Standardised city name, e.g. Bengaluru, Mumbai, Delhi.
+        data_tests: [not_null]
+      - name: state
+        description: Indian state of the city.
+      - name: city_tier
+        description: 1 for metros and NCR, 2 for other cities.
+      - name: channel
+        description: Where the order was placed, 'app' or 'web'.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [app, web]
+      - name: device
+        description: "'mobile' or 'desktop'."
+      - name: product_id
+        description: Product identifier, e.g. P101.
+      - name: category
+        description: "Product category: Electronics, Fashion, Home & Kitchen, Beauty, Books, Sports."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [Electronics, Fashion, Home & Kitchen, Beauty, Books, Sports]
+      - name: quantity
+        description: Units ordered.
+      - name: unit_price
+        description: Price per unit in rupees (INR).
+      - name: gross_revenue
+        description: quantity * unit_price in rupees, before refunds.
+      - name: is_refunded
+        description: True if the order was refunded.
+      - name: refunded_at
+        description: When the refund happened, null if not refunded.
+      - name: net_revenue
+        description: Revenue in rupees after refunds (0 for refunded orders). Use this for revenue questions.
+      - name: customer_order_number
+        description: 1 for a customer's first order, 2 for their second, and so on. Values > 1 are repeat purchases.
+
+  - name: dim_customers
+    description: One row per customer who has placed at least one order.
+    columns:
+      - name: customer_id
+        description: Customer identifier.
+        data_tests: [unique, not_null]
+      - name: city
+        description: City of the customer's most recent order.
+      - name: state
+        description: State of the customer's most recent order.
+      - name: city_tier
+        description: 1 for metros and NCR, 2 for other cities.
+      - name: first_channel
+        description: Channel of the first order, 'app' or 'web'.
+      - name: first_order_date
+        description: Date of the first order (IST).
+      - name: last_order_date
+        description: Date of the latest order (IST).
+      - name: order_count
+        description: Number of orders placed.
+      - name: lifetime_net_revenue
+        description: Total net revenue from this customer in rupees.
+      - name: is_repeat_buyer
+        description: True if the customer has placed 2 or more orders.
+
+  - name: fct_daily_kpis
+    description: One row per day (IST) with store-wide KPIs.
+    columns:
+      - name: date
+        description: Calendar date in IST.
+        data_tests: [unique, not_null]
+      - name: sessions
+        description: Shopping sessions with at least one page view.
+      - name: orders
+        description: Orders placed.
+      - name: customers
+        description: Distinct customers who ordered that day.
+      - name: new_customers
+        description: Customers whose first-ever order was that day.
+      - name: refunded_orders
+        description: Orders placed that day that were later refunded.
+      - name: gross_revenue
+        description: Revenue before refunds, rupees.
+      - name: net_revenue
+        description: Revenue after refunds, rupees.
+      - name: avg_order_value
+        description: net_revenue / orders, rupees. Null on days without orders.
+      - name: conversion_rate
+        description: orders / sessions, a fraction between 0 and 1.
+
+  - name: mart_funnel_monthly
+    description: Monthly shopping funnel, counted in sessions.
+    columns:
+      - name: month
+        description: First day of the month.
+        data_tests: [unique, not_null]
+      - name: sessions_viewed
+        description: Sessions that viewed a product.
+      - name: sessions_added_to_cart
+        description: Sessions that added to cart.
+      - name: sessions_checked_out
+        description: Sessions that started checkout.
+      - name: sessions_ordered
+        description: Sessions that placed an order.
+
+  - name: mart_cohort_retention
+    description: Monthly cohort retention. A cohort is all customers whose first order was in cohort_month.
+    columns:
+      - name: cohort_month
+        description: First day of the month of the customers' first order.
+        data_tests: [not_null]
+      - name: month_number
+        description: Months since the cohort month (0 = the first month).
+      - name: cohort_size
+        description: Customers in the cohort.
+      - name: active_customers
+        description: Cohort customers who ordered in that month.
+      - name: retention_rate
+        description: active_customers / cohort_size, a fraction between 0 and 1.
+
+  - name: mart_rfm
+    description: RFM (recency, frequency, monetary) scores and segment for each customer.
+    columns:
+      - name: customer_id
+        description: Customer identifier.
+        data_tests: [unique, not_null]
+      - name: city
+        description: Customer city.
+      - name: recency_days
+        description: Days between the customer's last order and the latest order date in the data.
+      - name: frequency
+        description: Number of orders.
+      - name: monetary
+        description: Lifetime net revenue in rupees.
+      - name: r_score
+        description: Recency score 1-5 (5 = ordered recently).
+      - name: f_score
+        description: Frequency score 1-5.
+      - name: m_score
+        description: Monetary quintile 1-5.
+      - name: segment
+        description: "One of: Champions, Loyal, New, At risk, Hibernating, Needs attention."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [Champions, Loyal, New, At risk, Hibernating, Needs attention]
+
+  - name: mart_city_summary
+    description: One row per city with customer, repeat-buyer and revenue totals across all time.
+    columns:
+      - name: city
+        description: Standardised city name.
+        data_tests: [unique, not_null]
+      - name: state
+        description: Indian state.
+      - name: city_tier
+        description: 1 for metros and NCR, 2 for other cities.
+      - name: customers
+        description: Customers whose latest order was in this city.
+      - name: repeat_customers
+        description: Of those, customers with 2 or more orders.
+      - name: repeat_rate
+        description: repeat_customers / customers, a fraction.
+      - name: orders
+        description: Total orders by these customers.
+      - name: net_revenue
+        description: Total net revenue in rupees.
+      - name: avg_order_value
+        description: Net revenue per order, rupees.

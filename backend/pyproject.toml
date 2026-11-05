@@ -1,0 +1,36 @@
+[project]
+name = "cartlens"
+version = "1.0.0"
+description = "Customer Intelligence Platform: e-commerce event pipeline, dbt models, FastAPI and an Ask-your-data AI chat"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["dbt"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]  # the formatter wraps code; long SQL and prompt strings stay readable
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependency markers are meant to be called in signatures
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = [
+    # Starlette suggests the httpx2 fork for TestClient; plain httpx still works.
+    "ignore:Using .httpx. with .starlette.testclient.",
+]
+
+[tool.coverage.run]
+source = ["app", "pipeline"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 90

@@ -1,0 +1,22 @@
+# Pipeline image: Prefect flow + dbt. Used by docker compose and the daily GitHub Actions run.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PREFECT_HOME=/tmp/prefect \
+    PREFECT_SERVER_ANALYTICS_ENABLED=false \
+    DO_NOT_TRACK=1
+
+WORKDIR /app
+COPY requirements.txt requirements-pipeline.txt ./
+RUN pip install -r requirements-pipeline.txt
+
+COPY pipeline ./pipeline
+COPY dbt ./dbt
+RUN useradd --create-home appuser && chown -R appuser /app
+USER appuser
+
+# Arguments after the image name are passed to the flow, e.g. --as-of 2026-11-04
+ENTRYPOINT ["python", "-m", "pipeline.flow"]

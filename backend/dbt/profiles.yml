@@ -1,0 +1,14 @@
+# Connection comes from DBT_* variables, which pipeline/flow.py derives from DATABASE_URL.
+cartlens:
+  target: default
+  outputs:
+    default:
+      type: postgres
+      host: "{{ env_var('DBT_HOST') }}"
+      port: "{{ env_var('DBT_PORT') | as_number }}"
+      user: "{{ env_var('DBT_USER') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      dbname: "{{ env_var('DBT_DBNAME') }}"
+      sslmode: "{{ env_var('DBT_SSLMODE', 'prefer') }}"
+      schema: analytics
+      threads: 4

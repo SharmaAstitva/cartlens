@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# dbt
+backend/dbt/target/
+backend/dbt/logs/
+backend/dbt/.user.yml
+logs/
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# Secrets and local files
+.env
+*.zip
+
+# Editor, OS and local env files
+.vscode/
+Thumbs.db
+*.log
+.env.*
+!.env.example
+*-log.txt

@@ -1,0 +1,8 @@
+version: 2
+
+seeds:
+  - name: city_aliases
+    description: Maps every spelling seen in the feed (lowercased, trimmed) to a standard city.
+    columns:
+      - name: alias
+        data_tests: [unique, not_null]

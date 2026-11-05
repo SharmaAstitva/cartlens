@@ -1,0 +1,45 @@
+name: Daily pipeline
+
+# Every day at 07:00 IST: load yesterday's events into Neon and rebuild the dbt models.
+# Run it by hand from the Actions tab (first run backfills a year of history).
+on:
+  schedule:
+    - cron: "30 1 * * *"
+  workflow_dispatch:
+    inputs:
+      backfill_days:
+        description: Days of history to load if the database is empty
+        default: "365"
+      as_of:
+        description: Treat this date as today (YYYY-MM-DD). Leave empty for today.
+        default: ""
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the DATABASE_URL secret
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Add a repository secret named DATABASE_URL (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+      - name: Build the pipeline image
+        run: docker build -t cartlens-pipeline -f backend/Dockerfile.pipeline backend
+      - name: Run the pipeline in Docker
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKFILL_DAYS: ${{ inputs.backfill_days || '365' }}
+          AS_OF: ${{ inputs.as_of }}
+        run: |
+          args="--backfill-days $BACKFILL_DAYS"
+          if [ -n "$AS_OF" ]; then args="$args --as-of $AS_OF"; fi
+          docker run --rm -e DATABASE_URL cartlens-pipeline $args

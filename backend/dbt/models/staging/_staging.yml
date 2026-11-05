@@ -1,0 +1,38 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: events
+        description: Events as delivered by the tracker, one row per event_id (exact duplicates already dropped at load).
+
+models:
+  - name: stg_events
+    description: Cleaned events. Timestamps parsed from four formats, prices parsed, cities standardised.
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: event_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [page_view, add_to_cart, checkout_started, order_placed, order_refunded]
+      - name: occurred_at
+        data_tests: [not_null]
+      - name: customer_id
+        data_tests: [not_null]
+
+  - name: stg_orders
+    description: One row per order (double-submitted orders removed).
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: unit_price
+        data_tests: [not_null]
+
+  - name: stg_refunds
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]

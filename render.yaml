@@ -1,0 +1,21 @@
+# Render Blueprint: the API as a Docker web service.
+# After the Blueprint deploy, open the service's Environment tab and check that all three
+# variables are set (sync: false values are not always filled in by the Blueprint flow).
+services:
+  - type: web
+    name: cartlens-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/health
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false

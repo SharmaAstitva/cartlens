@@ -1,0 +1,59 @@
+# The whole platform on your machine:  docker compose up --build
+#   1. db        Postgres 17
+#   2. pipeline  loads a year of events and runs dbt build, then exits
+#   3. api       FastAPI on http://localhost:8000 (docs at /api/docs)
+#   4. web       the dashboard on http://localhost:8080
+# Tests only need the database:  docker compose up -d db
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: cartlens
+      POSTGRES_PASSWORD: cartlens
+      POSTGRES_DB: cartlens
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cartlens -d cartlens"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  pipeline:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.pipeline
+    environment:
+      DATABASE_URL: postgresql://cartlens:cartlens@db:5432/cartlens
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://cartlens:cartlens@db:5432/cartlens
+      CORS_ORIGINS: http://localhost:8080,http://localhost:5173
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

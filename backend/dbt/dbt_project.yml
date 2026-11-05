@@ -1,0 +1,26 @@
+name: cartlens
+version: "1.0.0"
+profile: cartlens
+config-version: 2
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "logs"]
+
+models:
+  cartlens:
+    +persist_docs:          # column descriptions become Postgres comments,
+      relation: true        # which the Ask-your-data prompt reads at runtime
+      columns: true
+    staging:
+      +schema: staging      # -> analytics_staging
+      +materialized: view
+    marts:
+      +materialized: table  # -> analytics
+
+seeds:
+  cartlens:
+    +schema: staging

@@ -1,0 +1,34 @@
+alias,city,state,tier
+ahmedabad,Ahmedabad,Gujarat,1
+amdavad,Ahmedabad,Gujarat,1
+bangalore,Bengaluru,Karnataka,1
+bengaluru,Bengaluru,Karnataka,1
+bhopal,Bhopal,Madhya Pradesh,2
+blr,Bengaluru,Karnataka,1
+bombay,Mumbai,Maharashtra,1
+calcutta,Kolkata,West Bengal,1
+chandigarh,Chandigarh,Chandigarh,2
+chennai,Chennai,Tamil Nadu,1
+cochin,Kochi,Kerala,2
+coimbatore,Coimbatore,Tamil Nadu,2
+delhi,Delhi,Delhi,1
+gurgaon,Gurugram,Haryana,1
+gurugram,Gurugram,Haryana,1
+hyd,Hyderabad,Telangana,1
+hyderabad,Hyderabad,Telangana,1
+indore,Indore,Madhya Pradesh,2
+jaipur,Jaipur,Rajasthan,2
+kochi,Kochi,Kerala,2
+kolkata,Kolkata,West Bengal,1
+kovai,Coimbatore,Tamil Nadu,2
+lucknow,Lucknow,Uttar Pradesh,2
+madras,Chennai,Tamil Nadu,1
+mumbai,Mumbai,Maharashtra,1
+nagpur,Nagpur,Maharashtra,2
+new delhi,Delhi,Delhi,1
+noida,Noida,Uttar Pradesh,1
+poona,Pune,Maharashtra,1
+pune,Pune,Maharashtra,1
+surat,Surat,Gujarat,2
+visakhapatnam,Visakhapatnam,Andhra Pradesh,2
+vizag,Visakhapatnam,Andhra Pradesh,2
