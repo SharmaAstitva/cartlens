@@ -7,7 +7,7 @@ and explored in a **React** dashboard. The highlight is **Ask your data**: type
 
 The whole stack runs locally with one command: `docker compose up --build`.
 
-**Live demo:** [   cartlens-bice.vercel.app](https://   cartlens-bice.vercel.app) · **API docs:** [cartlens-api.onrender.com/api/docs](https://cartlens-api.onrender.com/api/docs)
+**Live demo:** [cartlens-bice.vercel.app](https://cartlens-bice.vercel.app) · **API docs:** [cartlens-api.onrender.com/api/docs](https://cartlens-api.onrender.com/api/docs)
 
 ![CI](https://github.com/SharmaAstitva/cartlens/actions/workflows/ci.yml/badge.svg)
 
