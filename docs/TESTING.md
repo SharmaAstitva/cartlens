@@ -65,13 +65,17 @@ pytest --cov                       # everything, with the 90% gate
 
 ## Frontend
 
-44 tests, about 6 seconds. `fetch` is stubbed with fixtures (`src/__tests__/fixtures.js`), so no API is needed.
+67 tests, about 8 seconds. `fetch` is stubbed with fixtures (`src/__tests__/fixtures.js`), so no API is needed.
 
 - **Unit** (`src/__tests__/unit`): number formatting (Indian digit grouping: ₹17,34,567, ₹1.7Cr), the API
   client's error messages, the `useApi` hook (loading, error, retry, path change), and the Chart, DataTable,
-  CohortGrid and Status components.
+  CohortGrid and Status components. The zoomable chart is tested in three layers: the pure range maths in
+  `zoom.js` (zoom around the centre, minimum width, clamping at the edges, panning), the `ZoomChart` component
+  (buttons, keyboard, Ctrl + scroll, and the readout and table following the window), and the `useCountUp`
+  animation hook with a stubbed clock and `requestAnimationFrame`, including the reduced-motion path.
 - **Integration** (`src/__tests__/integration`): the whole `<App>` rendered in a router, as a user sees it:
-  navigation, KPIs with period-over-period change, switching the period, the funnel, cohorts, the pipeline page,
+  navigation, the Ctrl + K quick switcher (filtering, arrow keys, Enter, Escape, clicking outside), KPIs with
+  period-over-period change, switching the period, an empty period, the funnel, cohorts, the pipeline page,
   and the Ask flow (click an example, type a question, see the SQL, errors, demo mode). Queries use roles and
   labels (`getByRole("group", { name: "Net revenue" })`), which also checks basic accessibility.
 
@@ -100,11 +104,12 @@ the Pipeline page.
 | | Gate | Measured |
 | --- | --- | --- |
 | Backend (unit + integration, branch coverage on) | 90% | 98.6% |
-| Frontend statements / branches / functions / lines | 90% each | 98.5% / 95% / 96.7% / 100% |
+| Frontend statements / branches / functions / lines | 90% each | 98.6% / 97.9% / 96.6% / 98.9% |
 
 ## What is not tested automatically
 
 - The real Groq API (it is mocked; checking it would make CI depend on a third-party key and rate limits).
   Check it by hand after deploying: `/api/health` shows the model, and the Ask page should answer a new question.
-- The browser end to end (Playwright is on the roadmap).
+- The browser end to end (Playwright is on the roadmap). Recharts draws nothing in jsdom because there is no
+  layout, so dragging the chart navigator is checked by hand; the zoom logic it calls is unit-tested.
 - The Docker images are built in CI but not started there; `docker compose up` is checked by hand.

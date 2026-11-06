@@ -7,21 +7,32 @@ and explored in a **React** dashboard. The highlight is **Ask your data**: type
 
 The whole stack runs locally with one command: `docker compose up --build`.
 
-**Live demo:** _coming soon_ · **API docs:** _coming soon_
+**Live demo:** [   cartlens-bice.vercel.app](https://   cartlens-bice.vercel.app) · **API docs:** [cartlens-api.onrender.com/api/docs](https://cartlens-api.onrender.com/api/docs)
 
 ![CI](https://github.com/SharmaAstitva/cartlens/actions/workflows/ci.yml/badge.svg)
 
-<!-- Screenshot added after deployment -->
+> The API runs on Render's free plan and sleeps after 15 minutes without traffic, so the first page load can take
+> up to a minute. After that it is fast.
+
+![CartLens overview: KPI cards and a zoomable daily revenue chart](docs/screenshot.png)
 
 ## What it does
 
 | Page | What you see |
 | --- | --- |
-| Overview | Revenue, orders, AOV, customers, repeat rate and conversion, each compared with the previous period; daily revenue; top cities |
+| Overview | Revenue, orders, AOV, customers, repeat rate and conversion, each compared with the previous period; a zoomable daily revenue chart; top cities |
 | Customers | RFM segments (Champions, Loyal, At risk...) and a monthly cohort-retention grid |
 | Funnel | Viewed → added to cart → checkout → ordered, with step conversion |
 | Ask your data | Natural-language questions answered with SQL, a chart and a plain-English explanation |
 | Pipeline | Row counts, AI model status, and the history of every pipeline run with its dbt test results |
+
+**Exploring the revenue chart.** Zoom with the + / − buttons, Ctrl (⌘) + scroll, or the keyboard (← → to pan,
++ − to zoom, 0 to reset), or drag the navigator under the chart. The total, daily average, best day and the table
+below always describe the window in view. **Ctrl + K** opens a quick switcher for the pages.
+
+**Design.** A dark "control room" theme where each colour means one kind of number everywhere: amber is money,
+cyan is people, violet is activity; green and pink only mean up and down. Motion (page entrances, KPI count-ups,
+the funnel filling in) switches off when the operating system asks for reduced motion.
 
 ## Architecture
 
@@ -91,7 +102,7 @@ questions with pre-written SQL (still checked by the guard and run on live data)
 | Orchestration | Prefect 3, scheduled by GitHub Actions |
 | API | Python 3.11, FastAPI, psycopg 3 + connection pool, sqlglot, httpx |
 | AI | Groq `openai/gpt-oss-120b` with JSON-schema structured outputs |
-| Frontend | React 19, React Router 8, Recharts, Vite 8 |
+| Frontend | React 19, React Router 8, Recharts 3, Vite 8; plain CSS with design tokens |
 | Testing | pytest + pytest-cov, Vitest 5 + Testing Library, dbt data tests |
 | Infra | Docker + Docker Compose, GitHub Actions, Render (API, Docker runtime), Vercel (frontend) |
 
@@ -130,7 +141,7 @@ npm run dev                             # http://localhost:5173
 | --- | --- | --- |
 | Backend unit (pytest) | 106 | |
 | Backend integration (real Postgres, Prefect flow, dbt build) | 29 | 98.6% combined (gate: 90%) |
-| Frontend unit + integration (Vitest) | 44 | 98.5% statements, 95% branches (gate: 90%) |
+| Frontend unit + integration (Vitest) | 67 | 98.6% statements, 97.9% branches, 96.6% functions, 98.9% lines (gate: 90%) |
 | dbt data tests (every pipeline run) | 37 | |
 
 ```bash
@@ -158,10 +169,13 @@ images on every push. See [docs/TESTING.md](docs/TESTING.md) for the strategy.
 
 | Part | Where | Notes |
 | --- | --- | --- |
-| Database | Neon (free) | `DATABASE_URL` uses the direct (non-pooled) connection string |
+| Database | Neon (free, AWS Singapore) | `DATABASE_URL` uses the direct (non-pooled) connection string |
 | Pipeline | GitHub Actions + Docker | `.github/workflows/pipeline.yml`, needs the `DATABASE_URL` repository secret |
-| API | Render (Docker, free) | `render.yaml`; free instances sleep after 15 minutes idle, so the first request can take ~1 minute |
-| Frontend | Vercel | Root directory `frontend`, env var `VITE_API_URL` |
+| API | Render (Docker, free, Singapore) | `render.yaml`; set `DATABASE_URL`, `CORS_ORIGINS`, `GROQ_API_KEY`. Free instances sleep after 15 minutes idle, so the first request can take ~1 minute |
+| Frontend | Vercel | Root directory `frontend`, install command `npm ci`, env var `VITE_API_URL` |
+
+The API and database are in the same region (Singapore), so each query is a short hop rather than a round trip
+across the Pacific.
 
 GitHub pauses scheduled workflows after 60 days without repository activity; re-enable it from the Actions tab.
 
@@ -170,7 +184,8 @@ GitHub pauses scheduled workflows after 60 days without repository activity; re-
 - Churn-risk model (probability that a customer won't order again in 90 days) as a new mart
 - Incremental dbt models and a streaming ingest path (Redpanda) for higher volumes
 - A separate read-only database role for Ask your data, in addition to read-only transactions
-- Host the dbt docs site; Playwright end-to-end tests
+- Host the dbt docs site; Playwright end-to-end tests (including chart zoom and drag, which jsdom cannot lay out)
+- Split the Recharts bundle with dynamic `import()` so the first page loads less JavaScript
 
 ## License
 

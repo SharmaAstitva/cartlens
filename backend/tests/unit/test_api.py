@@ -25,7 +25,7 @@ class FakePool:
 
 @pytest.fixture
 def client():
-    app = main.create_app(load_settings({"CORS_ORIGINS": "https://cartlens.vercel.app"}))
+    app = main.create_app(load_settings({"CORS_ORIGINS": "https://   cartlens-bice.vercel.app"}))
     app.state.pool = FakePool()
     return TestClient(app)
 
@@ -154,6 +154,6 @@ def test_ask_errors_map_to_status_codes(client, monkeypatch, error, status):
 def test_cors_allows_configured_origin(client):
     res = client.options(
         "/api/health",
-        headers={"Origin": "https://cartlens.vercel.app", "Access-Control-Request-Method": "GET"},
+        headers={"Origin": "https://   cartlens-bice.vercel.app", "Access-Control-Request-Method": "GET"},
     )
-    assert res.headers["access-control-allow-origin"] == "https://cartlens.vercel.app"
+    assert res.headers["access-control-allow-origin"] == "https://   cartlens-bice.vercel.app"
